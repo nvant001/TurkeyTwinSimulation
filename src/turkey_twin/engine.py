@@ -1,5 +1,6 @@
 from entities import Vehicle, Warehouse, Location
 import datetime
+import csv
 
 class SimulationEngine:
     time = 0
@@ -17,5 +18,14 @@ class SimulationEngine:
             vehicle.update()
 
     def run(self, steps: int):
-        for _ in range(steps):
-            self.step()
+        filename = f"data/simulation_log_{datetime.datetime.now().strftime('%Y%m%d_%H%M%S')}.csv"
+        with open(filename, 'w') as csvfile:
+            writer = csv.writer(csvfile) 
+            header = ['tick' , 'vehicle_id' ,'x','y','battery','status']
+            writer.writerow(header)
+            for tick in range(steps):
+                self.step()
+                for vehicle in self.vehicles:
+                    line = [tick, vehicle.id, vehicle.location.x, vehicle.location.y, vehicle.battery_level, vehicle.status]
+                    writer.writerow(line)
+

@@ -15,11 +15,15 @@ def start_simulation():
     print("\n[2] Deploying Fleet...")
     truck_1 = Vehicle(id="Tk-01", location=Location(x=0, y=0))
     print(f"        Deployed {truck_1}")
+    truck_2 = Vehicle(id="Tk-02", location=Location(x=5, y=5))
+    print(f"        Deployed {truck_2}")
 
     print("\n[3]Testing Physics...")
     engine = SimulationEngine()
     engine.add_vehicle(truck_1)
+    engine.add_vehicle(truck_2)
     truck_1.set_destination(10, 40)
+    truck_2.set_destination(-20, 15)
     engine.run(steps=35)
 
 
