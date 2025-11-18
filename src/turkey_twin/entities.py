@@ -30,7 +30,53 @@ class Vehicle:
     battery_level: float = 100.0 #starts full
     speed: float = 1.0 #default speed
     status: str = "IDLE" #default status of vehicle
+    target_location: Location = None
 
+    def set_destination(self, dest_x: float, dest_y: float):
+        
+        self.target_location = Location(x=dest_x, y=dest_y)
+
+    def update(self):
+
+        if self.target_location is not None:
+            dx = self.target_location.x - self.location.x
+            dy = self.target_location.y - self.location.y
+            distance = math.sqrt(dx**2 + dy**2)
+
+            if distance < self.speed:
+                battery_cost = distance * .5
+                if self.battery_level > battery_cost:
+                    self.location.x = self.target_location.x
+                    self.location.y = self.target_location.y
+                    self.battery_level -= battery_cost
+                    self.target_location = None
+                    self.status = "IDLE"
+                    print(f" -> Vehicle {self.id} reached destination {self.location}. Battery: {self.battery_level}")
+                else:
+                    print(f"!!!!! Vehicle {self.id} cannot reach destination, not enough battery!")
+                    self.status = "DEAD_BATTERY"
+
+            #increment movement toward target
+            else:
+                battery_step_cost = self.speed * .5
+
+                if self.battery_level >= battery_step_cost:
+                    
+                    direction_x = dx/distance
+                    direction_y = dy/distance
+
+                    self.location.x += direction_x * self.speed
+                    self.location.y += direction_y * self.speed
+
+                    self.status = "MOVING"
+                    self.battery_level -= battery_step_cost
+
+
+                else:
+                    print(f"!!!!! Vehicle {self.id} is out of battery during movement!")
+                    self.status = "DEAD_BATTERY"
+
+    #this is not really needed at the moment
     def move_to(self, new_x: float, new_y: float):
 
         distance = math.sqrt((new_x - self.location.x)**2 + (new_y - self.location.y)**2)

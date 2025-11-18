@@ -2,6 +2,7 @@
 import sys
 import datetime
 from entities import Vehicle, Warehouse, Location
+from engine import SimulationEngine
 def start_simulation():
     print(f"[{datetime.datetime.now()}]: Simulation started")
     print(f"python version: {sys.version.split()[0]}")
@@ -16,10 +17,11 @@ def start_simulation():
     print(f"        Deployed {truck_1}")
 
     print("\n[3]Testing Physics...")
-    print(f"     Moving {truck_1} to (3,4)")
-    truck_1.move_to(3, 4)
-    print(f"     Moving {truck_1} to (10,10)")
-    truck_1.move_to(10, 10)
+    engine = SimulationEngine()
+    engine.add_vehicle(truck_1)
+    truck_1.set_destination(10, 40)
+    engine.run(steps=35)
+
 
     print(f"\nFinal State: {truck_1}")
 
