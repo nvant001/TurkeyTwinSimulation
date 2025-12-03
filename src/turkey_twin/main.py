@@ -1,9 +1,9 @@
 # src/turkey_twin/main.py
 import sys
 import datetime
-from entities import Vehicle, Warehouse, Location
-from engine import SimulationEngine
-from map_graph import MapGraph
+from turkey_twin.entities import Vehicle, Warehouse, Location
+from turkey_twin.engine import SimulationEngine
+from turkey_twin.map_graph import MapGraph
 def start_simulation():
     print(f"[{datetime.datetime.now()}]: Simulation started")
     print(f"python version: {sys.version.split()[0]}")
@@ -26,7 +26,7 @@ def start_simulation():
     engine.add_vehicle(truck_2)
     truck_1.set_destination(dest_hub.location.x, dest_hub.location.y)
     truck_2.set_destination(dest_hub.location.x, dest_hub.location.y)
-    engine.run(steps=35)
+    engine.run_batch(steps=100)
 
 
     print(f"\nFinal State: {truck_1}") 

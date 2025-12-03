@@ -4,3 +4,6 @@ numpy
 fastapi
 uvicorn
 pydantic
+streamlit
+requests
+plotly

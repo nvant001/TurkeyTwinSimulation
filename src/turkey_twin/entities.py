@@ -1,7 +1,8 @@
+# src/turkey_twin/entities.py
 from dataclasses import dataclass, field
 from typing import List
 import math
-from map_graph import MapGraph
+from turkey_twin.map_graph import MapGraph
 
 @dataclass
 class Location:

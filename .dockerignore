@@ -1,0 +1,12 @@
+# .dockerignore
+
+venv/
+.venv/
+
+.git
+.gitignore
+.vscode/
+__pycache__/
+
+data/simulation_data.db
+*.db

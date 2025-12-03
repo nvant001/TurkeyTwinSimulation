@@ -2,7 +2,7 @@
 import sqlite3
 import os
 
-DATABASE_PATH = "data/simulation.db"
+from turkey_twin.config import DATABASE_PATH
 
 def run_analytics():
 
