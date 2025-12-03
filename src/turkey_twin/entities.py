@@ -1,7 +1,7 @@
-from dataclasses import dataclass
+from dataclasses import dataclass, field
 from typing import List
 import math
-
+from map_graph import MapGraph
 
 @dataclass
 class Location:
@@ -31,64 +31,87 @@ class Vehicle:
     speed: float = 1.0 #default speed
     status: str = "IDLE" #default status of vehicle
     target_location: Location = None
+    path_route: List[Location] = field(default_factory=list)
+    map_ref: MapGraph =  field(default=None, repr=False)
 
     def set_destination(self, dest_x: float, dest_y: float):
+        if not self.map_ref:
+            print("[ERROR]: Vehicle has no MapGraph reference.")
+            return
+
+        # 1. Convert float current/dest to integer grid coordinates
+        start_grid = (int(self.location.x), int(self.location.y))
+        end_grid = (int(dest_x), int(dest_y))
         
-        self.target_location = Location(x=dest_x, y=dest_y)
+        # 2. Find the path
+        grid_path = self.map_ref.find_path(start_grid, end_grid)
+        
+        if not grid_path:
+            self.status = "BLOCKED"
+            print(f"!! Vehicle {self.id} cannot find path to {end_grid}.")
+            return
+            
+        # 3. Convert path back to Location objects and store (excluding current position)
+        self.path_route = [Location(float(x), float(y)) for x, y in grid_path[1:]] 
+        self.target_location = self.path_route[0] if self.path_route else None
+        self.status = "PATHING"
+        print(f"Vehicle {self.id} set route with {len(self.path_route)} steps.")
 
     def update(self):
-
-        if self.target_location is not None:
-            dx = self.target_location.x - self.location.x
-            dy = self.target_location.y - self.location.y
-            distance = math.sqrt(dx**2 + dy**2)
-
-            if distance < self.speed:
-                battery_cost = distance * .5
-                if self.battery_level > battery_cost:
-                    self.location.x = self.target_location.x
-                    self.location.y = self.target_location.y
-                    self.battery_level -= battery_cost
-                    self.target_location = None
-                    self.status = "IDLE"
-                    print(f" -> Vehicle {self.id} reached destination {self.location}. Battery: {self.battery_level}")
-                else:
-                    print(f"!!!!! Vehicle {self.id} cannot reach destination, not enough battery!")
-                    self.status = "DEAD_BATTERY"
-
-            #increment movement toward target
-            else:
-                battery_step_cost = self.speed * .5
-
-                if self.battery_level >= battery_step_cost:
-                    
-                    direction_x = dx/distance
-                    direction_y = dy/distance
-
-                    self.location.x += direction_x * self.speed
-                    self.location.y += direction_y * self.speed
-
-                    self.status = "MOVING"
-                    self.battery_level -= battery_step_cost
-
-
-                else:
-                    print(f"!!!!! Vehicle {self.id} is out of battery during movement!")
-                    self.status = "DEAD_BATTERY"
-
-    #this is not really needed at the moment
-    def move_to(self, new_x: float, new_y: float):
-
-        distance = math.sqrt((new_x - self.location.x)**2 + (new_y - self.location.y)**2)
-        energy_cost = distance/2
-
-        if self.battery_level >= energy_cost:
-            self.location.x = new_x
-            self.location.y = new_y
-            self.battery_level -= energy_cost
-            self.status = "MOVING"
-            print(f" -> Vehicle {self.id} moved to {self.location}. Battery: {self.battery_level}")
-        else:
-            self.status = "DEAD_BATTERY"
-            print(f"!!!!! Vehcile {self.id} is stuck! Not enough batter to move {distance:.2f%}, Battery level is only {self.battery_level:.1f%} when {energy_cost:.1f%} is needed!")
+            """
+            Called every tick to advance the vehicle's position along its path.
+            """
             
+            # 1. Grab the next sub-target if the current one was reached (or is empty)
+            if self.target_location is None and self.path_route:
+                self.target_location = self.path_route.pop(0)
+                self.status = "MOVING" 
+            
+            # 2. Execute movement toward the target
+            if self.target_location is not None:
+                dx = self.target_location.x - self.location.x
+                dy = self.target_location.y - self.location.y
+                distance = math.sqrt(dx**2 + dy**2)
+
+
+                if distance <= self.speed:
+                    battery_cost = distance * 0.5 
+                    
+                    if self.battery_level > battery_cost:
+              
+                        self.location.x = self.target_location.x
+                        self.location.y = self.target_location.y
+                        self.battery_level -= battery_cost
+                        
+                        self.target_location = None 
+                        
+                    
+                        if not self.path_route:
+                            self.status = "IDLE"
+                            print(f" -> Vehicle {self.id} ARRIVED at final destination {self.location}. Battery: {self.battery_level:.2f}")
+              
+                        
+                    else:
+                        self.status = "DEAD_BATTERY"
+                        print(f"!!!!! Vehicle {self.id} cannot reach destination, not enough battery!")
+
+               
+                else:
+                    battery_step_cost = self.speed * 0.5
+
+                    if self.battery_level >= battery_step_cost:
+                        
+                        direction_x = dx/distance
+                        direction_y = dy/distance
+
+                        self.location.x += direction_x * self.speed
+                        self.location.y += direction_y * self.speed
+
+                        self.status = "MOVING"
+                        self.battery_level -= battery_step_cost
+                        
+                    else:
+                        self.status = "DEAD_BATTERY"
+                        print(f"!!!!! Vehicle {self.id} is out of battery during movement!")
+
+    
